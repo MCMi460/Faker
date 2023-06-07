@@ -25,9 +25,14 @@ class Generator:
 
         return String(tuple( random.choice(vowels) if type in ('v', 'vowel') else random.choice(consonants) for type in schema ))
 
-    def random_schema(self, length:int):
+    def random_schema(self, length:int, *, leading:Letter = None, trailing:Letter = None):
         i = length
         order = []
+        if leading:
+            i -= 1
+            order.append('v' if leading.vowel else 'c')
+        if trailing:
+            i -= 1
         while i > 0:
             for n in range(random.randint(1, 4 if i >= 4 else i)): # consonant
                 if random.randint(0, 10) >= 9:
@@ -35,28 +40,31 @@ class Generator:
                 else:
                     order.append('c')
                 i -= 1
-        if order.count('c') == length:
-            order[random.randint(0, length - 1)] = 'v'
+        if order.count('c') == length - (1 if trailing else 0):
+            order[random.randint(0 if not leading else 1, length - (1 if not trailing else 2))] = 'v'
+        if trailing:
+            order.append('v' if trailing.vowel else 'c')
         return tuple(order)
 
     def mass_generate(self, *,
         length:int,
-        schema:tuple,
+        schema:tuple = None,
         iterations:int = 100,
         leading:Letter = None,
         trailing:Letter = None,
         repeats:bool = True, # If False, can lead to infinite freezes with lots of constraints
     ):
-        if leading:
-            if not isinstance(leading, Letter):
-                leading = Letter(leading)
-            if ('v' if leading.vowel else 'c') != schema[0][0]:
-                raise Generator_Exception('failure in leading type')
-        if trailing:
-            if not isinstance(trailing, Letter):
-                trailing = Letter(trailing)
-            if ('v' if trailing.vowel else 'c') != schema[-1][0]:
-                raise Generator_Exception('failure in trailing type')
+        if leading and not isinstance(leading, Letter):
+            leading = Letter(leading)
+        if trailing and not isinstance(trailing, Letter):
+            trailing = Letter(trailing)
+        if not schema:
+            schema = self.random_schema(length, leading = leading, trailing = trailing)
+        if leading and ('v' if leading.vowel else 'c') != schema[0][0]:
+            raise Generator_Exception('failure in leading type')
+        if trailing and ('v' if trailing.vowel else 'c') != schema[-1][0]:
+            raise Generator_Exception('failure in trailing type')
+
 
         out = []
         while len(out) < iterations:

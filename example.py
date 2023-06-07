@@ -11,7 +11,7 @@ def test():
     print('[Mass generate test]')
     mass = Generator().mass_generate(
         length = 3,
-        schema = ('c', 'v', 'c'), # Required to be inputted
+        schema = None,
         iterations = 10,
         leading = 'd',
         trailing = '',
